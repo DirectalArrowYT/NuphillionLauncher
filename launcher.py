@@ -192,6 +192,23 @@ def main(page: ft.Page):
             self.bg_img.height = height
             self.update()
 
+    class DynamicGif(ft.Stack):
+        def __init__(self):
+            super().__init__()
+            self.gif_img = ft.Image(
+                src=gif_path,
+                fit=ft.ImageFit.COVER,
+                width=page.window_width,
+                height=page.window_height,
+                opacity=1.0
+            )
+            self.controls = [self.gif_img]
+
+        def resize(self, width, height):
+            self.gif_img.width = width
+            self.gif_img.height = height
+            self.update()
+
     status_label = ft.Text("Status:", color="white", size=18, weight="bold")
     progress_bar = ft.ProgressBar(width=page.width * 0.26, value=0, color="#97E9E6")  # 26% of window width
     status_text = ft.Text("", color="white", size=16)
@@ -294,19 +311,6 @@ def main(page: ft.Page):
         create_button("Launch Game", launch_game_click_handler, "#38D3FB", ft.Icons.PLAY_ARROW),
     ], spacing=page.width * 0.01, alignment=ft.MainAxisAlignment.CENTER)  # 1% of window width spacing
 
-    # GIF at the bottom (scales with window)
-    gif_container = ft.Container(
-        content=ft.Image(
-            src=gif_path,
-            width=page.width * 0.09 if page.width * 0.09 <= 180 else 180,  # Max 180px
-            height=page.height * 0.11 if page.height * 0.11 <= 120 else 120,  # Max 120px
-            fit=ft.ImageFit.CONTAIN,
-            border_radius=18,
-        ),
-        padding=ft.padding.only(top=page.height * 0.01, bottom=page.height * 0.02),  # 1% top, 2% bottom
-        alignment=ft.alignment.center,
-    ) if os.path.exists(gif_path) else ft.Text("GIF not found", color="white")
-
     # Main content layout
     content = ft.Column([
         ft.Container(splash_logo, alignment=ft.alignment.center) if splash_logo else ft.Text("Splash logo not found", color="white"),
@@ -314,32 +318,43 @@ def main(page: ft.Page):
         ft.Container(status_label, padding=ft.padding.only(top=page.height * 0.02)),
         status_text,
         progress_bar,
-        gif_container,
         ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 | Directal |", size=12, color="white"),
     ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
 
+    dynamic_bg = None
+    dynamic_gif = None
     stack_children = []
     if os.path.exists(bg_path):
         dynamic_bg = DynamicBg()
         stack_children.append(dynamic_bg)
-        def on_resize(e):
-            dynamic_bg.resize(page.window_width, page.window_height)
-            # Update control sizes on resize
-            splash_logo.width = page.width * 0.57 if page.width * 0.57 <= 1100 else 1100
-            splash_logo.height = page.height * 0.55 if page.height * 0.55 <= 600 else 600
-            for btn in buttons.controls:
-                btn.width = page.width * 0.13
-            progress_bar.width = page.width * 0.26
-            buttons.spacing = page.width * 0.01
-            gif_container.content.width = page.width * 0.09 if page.width * 0.09 <= 180 else 180
-            gif_container.content.height = page.height * 0.11 if page.height * 0.11 <= 120 else 120
-            gif_container.padding = ft.padding.only(top=page.height * 0.01, bottom=page.height * 0.02)
-            content.controls[1].padding = ft.padding.only(top=page.height * 0.02, left=page.width * 0.03, right=page.width * 0.03)
-            content.controls[2].padding = ft.padding.only(top=page.height * 0.02)
-            page.update()
-        page.on_resize = on_resize
+
+    if os.path.exists(gif_path):
+        dynamic_gif = DynamicGif()
+        stack_children.append(dynamic_gif)
 
     stack_children.append(content)
+
+    def on_resize(e):
+        if dynamic_bg:
+            dynamic_bg.resize(page.window_width, page.window_height)
+        if dynamic_gif:
+            dynamic_gif.resize(page.window_width, page.window_height)
+        # Update control sizes on resize
+        if splash_logo:
+            splash_logo.width = page.width * 0.57 if page.width * 0.57 <= 1100 else 1100
+            splash_logo.height = page.height * 0.55 if page.height * 0.55 <= 600 else 600
+            splash_logo.update()
+        for btn in buttons.controls:
+            btn.width = page.width * 0.13
+            btn.update()
+        progress_bar.width = page.width * 0.26
+        progress_bar.update()
+        buttons.spacing = page.width * 0.01
+        buttons.update()
+        content.controls[1].padding = ft.padding.only(top=page.height * 0.02, left=page.width * 0.03, right=page.width * 0.03)
+        content.controls[2].padding = ft.padding.only(top=page.height * 0.02)
+        page.update()
+    page.on_resize = on_resize
 
     page.add(
         ft.Stack([
