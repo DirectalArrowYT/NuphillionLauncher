@@ -6,7 +6,7 @@ ________________________________
 - **Automatic update checks** and easy updating
 - **Bandwidth and download statistics** with live preview
 - **Game launch integration** dynamic HW2 Launcher + possible offline support for future via dll injection
-- **Beautiful, modern UI** with mica win11 style
+- **Beautiful, Halo Wars UI**
 - **No admin rights required** for mod install/uninstall
 - **Around 3 seconds startup time** reduced from ~4min 
 ________________________________
