@@ -7,7 +7,10 @@ import zipfile
 import asyncio
 import io
 import sys
+import logging
 from concurrent.futures import ThreadPoolExecutor
+# Set up logging to a file
+# logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Constants
 VERSION = '1_11_2931_2'
@@ -50,7 +53,7 @@ class ModManager:
                 shutil.rmtree(target_dir)
             os.makedirs(target_dir, exist_ok=True)
         except Exception as e:
-            print(f"Directory creation error: {e}")
+            logging.error(f"Directory creation error: {e}")
             raise
     async def _download_file(self, url):
         try:
@@ -61,7 +64,7 @@ class ModManager:
             response.raise_for_status()
             return response.content
         except Exception as e:
-            print(f"Download error: {e}")
+            logging.error(f"Download error: {e}")
             return None
     async def install_mod(self, progress_callback):
         try:
@@ -94,7 +97,7 @@ class ModManager:
                 return "Installation failed: Files not properly installed"
             return "Mod installation complete!"
         except Exception as e:
-            print(f"Installation error: {e}")
+            logging.error(f"Installation error: {e}")
             return f"Installation failed: {str(e)}"
     async def restore_original_files(self, progress_callback):
         try:
@@ -117,7 +120,7 @@ class ModManager:
                     progress_callback(progress)
             return "Original files restored successfully!"
         except Exception as e:
-            print(f"Restore error: {e}")
+            logging.error(f"Restore error: {e}")
             return f"Restore failed: {str(e)}"
 
 mod_manager = ModManager(appData)
@@ -134,22 +137,31 @@ def main(page: ft.Page):
     page.window_fullscreen = False  # Disable fullscreen
     page.bgcolor = "#006064"
     page.padding = 0
-    if hasattr(sys, "_MEIPASS"):
-        BASE_DIR = sys._MEIPASS
-    else:
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
     bg_path = os.path.join(ASSETS_DIR, "new_bg.png")  # 1920x1080 background
     splash_logo_path = os.path.join(ASSETS_DIR, "splash_logo.png")  # 1100x600 logo
     mp4_path = os.path.join(ASSETS_DIR, "HaloWars2Preview.mp4")
     favicon_path = os.path.join(ASSETS_DIR, "favicon.ico")
-    if os.path.exists(favicon_path):
-        page.window_icon = favicon_path
-        page.icon = favicon_path
-        try:
-            page.tray_icon = favicon_path
-        except Exception:
-            pass
+    logging.debug(f"Attempting to load favicon from: {favicon_path}")
+    for attempt in range(3):  # Retry up to 3 times
+        if os.path.exists(favicon_path):
+            logging.debug(f"Favicon found on attempt {attempt + 1}, setting icon")
+            try:
+                page.window_icon = favicon_path
+                page.icon = favicon_path
+                page.tray_icon = favicon_path
+                logging.debug("Icon set successfully")
+                break
+            except Exception as e:
+                logging.error(f"Error setting icon on attempt {attempt + 1}: {e}")
+        else:
+            logging.warning(f"Favicon not found at: {favicon_path} on attempt {attempt + 1}")
+        if attempt < 2:  # Wait before retrying
+            import time
+            time.sleep(0.5)
+    else:
+        logging.error("Failed to set favicon after 3 attempts")
     # Set initial window size to 1920x1080
     page.window_width = 1920
     page.window_height = 1080
@@ -183,8 +195,8 @@ def main(page: ft.Page):
                 height=page.window_height,
                 opacity=0.25,
                 show_controls=False,
-                on_loaded=lambda e: print("Video loaded successfully!"),
-                on_error=lambda e: print(f"Video error: {e.data}")
+                on_loaded=lambda e: logging.debug("Video loaded successfully!"),
+                on_error=lambda e: logging.error(f"Video error: {e.data}")
             )
             # Center the video in a container
             self.video_container = ft.Container(
