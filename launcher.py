@@ -15,7 +15,7 @@ VERSION_PTR = '1_11_2931_10'
 RELEASE_URI = 'https://github.com/DirectalArrowYT/ProjectVangaurd/releases/download/ThingNoWorky/ProjectVangaurd.zip'
 OG_FILES_URL = 'https://github.com/CutesyThrower12/HW2-Original-Files/releases/download/1.0/hw2ogfiles.zip'
 HW2_HOGAN_PATH = "Packages\\Microsoft.HoganThreshold_8wekyb3d8bbwe\\LocalState"
-UPDATER_RELEASE_URL = "https://github.com/TheDoctor200/NuphillionLauncher/releases/latest/download/NuphillionLauncher.exe"
+UPDATER_RELEASE_URL = "https://github.com/DirectalArrowYT/VangaurdModManager/releases/latest/download/ProjectVangaurd.exe"
 appData = os.environ.get('LOCALAPPDATA')
 if not appData:
     raise RuntimeError("Unable to find LOCALAPPDATA.")
@@ -128,10 +128,10 @@ from launch_game_utils import launch_game_click
 def main(page: ft.Page):
     page.title = "Project Vangaurd Mod Manager"
     page.window_title = "Project Vangaurd Mod Manager"
-    page.window_resizable = True
+    page.window_resizable = False  # Lock window size
     page.window_center = True
-    page.window_maximizable = True
-    page.window_always_on_top = False
+    page.window_maximizable = False  # Prevent maximizing
+    page.window_fullscreen = False  # Disable fullscreen
     page.bgcolor = "#006064"
     page.padding = 0
     if hasattr(sys, "_MEIPASS"):
@@ -183,12 +183,10 @@ def main(page: ft.Page):
                 height=page.window_height,
                 opacity=0.25,
                 show_controls=False,
-                on_loaded=lambda e: print(f"Video loaded! Size: {page.width}x{page.height}"),
-                on_error=lambda e: print(f"Video error: {e.data}"),
-                on_enter_fullscreen=lambda e: self.handle_fullscreen(True),
-                on_exit_fullscreen=lambda e: self.handle_fullscreen(False)
+                on_loaded=lambda e: print("Video loaded successfully!"),
+                on_error=lambda e: print(f"Video error: {e.data}")
             )
-            # Center the video in a container to avoid off-center issues
+            # Center the video in a container
             self.video_container = ft.Container(
                 content=self.video,
                 alignment=ft.alignment.center,
@@ -211,25 +209,6 @@ def main(page: ft.Page):
             self.video_container.height = height
             self.overlay.content.width = width
             self.overlay.content.height = height
-            self.update()
-
-        def handle_fullscreen(self, is_fullscreen):
-            if is_fullscreen:
-                print(f"Entering fullscreen. Page size: {page.width}x{page.height}")
-                self.video.width = page.width
-                self.video.height = page.height
-                self.video.fit = ft.ImageFit.COVER
-                self.video_container.width = page.width
-                self.video_container.height = page.height
-                self.overlay.content.width = page.width
-                self.overlay.content.height = page.height
-            else:
-                self.video.width = page.window_width
-                self.video.height = page.window_height
-                self.video_container.width = page.window_width
-                self.video_container.height = page.window_height
-                self.overlay.content.width = page.window_width
-                self.overlay.content.height = page.window_height
             self.update()
 
     status_label = ft.Text("Status:", color="white", size=18, weight="bold")
@@ -334,7 +313,7 @@ def main(page: ft.Page):
         ft.Container(status_label, padding=ft.padding.only(top=page.height * 0.02)),
         status_text,
         progress_bar,
-        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 || VANGAURD CREDITS: Directal | Hypnoskid12345 |", size=12, color="white"),
+        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 || VANGAURD CREDITS: Directal | Hypnoskid12345", size=12, color="white"),
     ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
 
     dynamic_bg = None
