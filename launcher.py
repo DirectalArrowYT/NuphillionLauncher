@@ -1,4 +1,5 @@
 import flet as ft
+import flet_video as ftv
 import os
 import shutil
 import requests
@@ -15,7 +16,6 @@ RELEASE_URI = 'https://github.com/DirectalArrowYT/ProjectVangaurd/releases/downl
 OG_FILES_URL = 'https://github.com/CutesyThrower12/HW2-Original-Files/releases/download/1.0/hw2ogfiles.zip'
 HW2_HOGAN_PATH = "Packages\\Microsoft.HoganThreshold_8wekyb3d8bbwe\\LocalState"
 UPDATER_RELEASE_URL = "https://github.com/TheDoctor200/NuphillionLauncher/releases/latest/download/NuphillionLauncher.exe"
-
 appData = os.environ.get('LOCALAPPDATA')
 if not appData:
     raise RuntimeError("Unable to find LOCALAPPDATA.")
@@ -27,26 +27,20 @@ class ModManager:
         if os.path.isdir(self.localPkgDir(VERSION_PTR)):
             self.version = VERSION_PTR
         self._executor = ThreadPoolExecutor(max_workers=1)
-
     def localPkgDir(self, version=None):
         return os.path.join(self.localStateDir, f"GTS\\{version or self.version}_active")
-
     def localPkgPath(self):
         return os.path.join(self.localPkgDir(), 'ProjectVangaurd.pkg')
-
     def localManifestPath(self):
         return os.path.join(self.localPkgDir(), f"{self.version}_file_manifest.xml")
-
     def local_mod_exists(self):
         return os.path.isfile(self.localPkgPath()) and os.path.isfile(self.localManifestPath())
-
     def ensure_directories(self):
         """Ensure all required directories exist"""
         os.makedirs(self.localStateDir, exist_ok=True)
         gts_path = os.path.join(self.localStateDir, "GTS")
         os.makedirs(gts_path, exist_ok=True)
         os.makedirs(self.localPkgDir(), exist_ok=True)
-
     def mod_cleanup(self):
         """Clean up and prepare directories for mod installation"""
         try:
@@ -58,7 +52,6 @@ class ModManager:
         except Exception as e:
             print(f"Directory creation error: {e}")
             raise
-
     async def _download_file(self, url):
         try:
             response = await asyncio.get_running_loop().run_in_executor(
@@ -70,7 +63,6 @@ class ModManager:
         except Exception as e:
             print(f"Download error: {e}")
             return None
-
     async def install_mod(self, progress_callback):
         try:
             self.ensure_directories()
@@ -78,47 +70,40 @@ class ModManager:
             content = await self._download_file(RELEASE_URI)
             if not content:
                 return "Failed to download mod."
-
             progress_callback(20)
-            
+           
             self.mod_cleanup()
             with zipfile.ZipFile(io.BytesIO(content)) as mod_zip:
-                files_to_extract = [f for f in mod_zip.namelist() 
+                files_to_extract = [f for f in mod_zip.namelist()
                                   if f.endswith('.pkg') or f.endswith('.xml')]
-                
+               
                 if not files_to_extract:
                     return "Invalid mod package: No valid files found"
-
                 total_files = len(files_to_extract)
                 for i, name in enumerate(files_to_extract):
                     if name.endswith('.pkg'):
                         target_path = self.localPkgPath()
                     else:
                         target_path = self.localManifestPath()
-
                     with mod_zip.open(name) as source, open(target_path, 'wb') as target:
                         shutil.copyfileobj(source, target)
-                    
+                   
                     progress = 20 + int((i + 1) / total_files * 80)
                     progress_callback(progress)
-
             if not self.local_mod_exists():
                 return "Installation failed: Files not properly installed"
-
             return "Mod installation complete!"
         except Exception as e:
             print(f"Installation error: {e}")
             return f"Installation failed: {str(e)}"
-
     async def restore_original_files(self, progress_callback):
         try:
             progress_callback(0)
             content = await self._download_file(OG_FILES_URL)
             if not content:
                 return "Failed to download original files."
-
             progress_callback(20)
-            
+           
             self.mod_cleanup()
             with zipfile.ZipFile(io.BytesIO(content)) as og_zip:
                 total_files = len(og_zip.namelist())
@@ -130,14 +115,12 @@ class ModManager:
                         target.write(source.read())
                     progress = 20 + int((i + 1) / total_files * 80)
                     progress_callback(progress)
-
             return "Original files restored successfully!"
         except Exception as e:
             print(f"Restore error: {e}")
             return f"Restore failed: {str(e)}"
 
 mod_manager = ModManager(appData)
-
 from win_utils import get_aumid, launch_app
 from update_utils import check_for_update
 from launch_game_utils import launch_game_click
@@ -151,18 +134,15 @@ def main(page: ft.Page):
     page.window_always_on_top = False
     page.bgcolor = "#006064"
     page.padding = 0
-
     if hasattr(sys, "_MEIPASS"):
         BASE_DIR = sys._MEIPASS
     else:
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
     bg_path = os.path.join(ASSETS_DIR, "new_bg.png")  # 1920x1080 background
     splash_logo_path = os.path.join(ASSETS_DIR, "splash_logo.png")  # 1100x600 logo
-    gif_path = os.path.join(ASSETS_DIR, "HaloWars2Preview.gif")
+    mp4_path = os.path.join(ASSETS_DIR, "HaloWars2Preview.mp4")
     favicon_path = os.path.join(ASSETS_DIR, "favicon.ico")
-
     if os.path.exists(favicon_path):
         page.window_icon = favicon_path
         page.icon = favicon_path
@@ -170,7 +150,6 @@ def main(page: ft.Page):
             page.tray_icon = favicon_path
         except Exception:
             pass
-
     # Set initial window size to 1920x1080
     page.window_width = 1920
     page.window_height = 1080
@@ -186,33 +165,76 @@ def main(page: ft.Page):
                 opacity=1.0
             )
             self.controls = [self.bg_img]
-
         def resize(self, width, height):
             self.bg_img.width = width
             self.bg_img.height = height
             self.update()
 
-    class DynamicGif(ft.Stack):
+    class DynamicVideo(ft.Stack):
         def __init__(self):
             super().__init__()
-            self.gif_img = ft.Image(
-                src=gif_path,
+            self.video = ftv.Video(
+                playlist=[ftv.VideoMedia(mp4_path)],
+                playlist_mode=ftv.PlaylistMode.LOOP,
+                autoplay=True,
+                muted=True,
                 fit=ft.ImageFit.COVER,
                 width=page.window_width,
                 height=page.window_height,
-                opacity=1.0
+                opacity=0.25,
+                show_controls=False,
+                on_loaded=lambda e: print(f"Video loaded! Size: {page.width}x{page.height}"),
+                on_error=lambda e: print(f"Video error: {e.data}"),
+                on_enter_fullscreen=lambda e: self.handle_fullscreen(True),
+                on_exit_fullscreen=lambda e: self.handle_fullscreen(False)
             )
-            self.controls = [self.gif_img]
-
+            # Center the video in a container to avoid off-center issues
+            self.video_container = ft.Container(
+                content=self.video,
+                alignment=ft.alignment.center,
+                expand=True
+            )
+            # Overlay to block interaction with video controls
+            self.overlay = ft.GestureDetector(
+                on_tap=lambda e: None,
+                on_pan_start=lambda e: None,
+                on_pan_update=lambda e: None,
+                on_pan_end=lambda e: None,
+                content=ft.Container(width=page.window_width, height=page.window_height, bgcolor=ft.Colors.TRANSPARENT)
+            )
+            self.controls = [self.video_container, self.overlay]
+        
         def resize(self, width, height):
-            self.gif_img.width = width
-            self.gif_img.height = height
+            self.video.width = width
+            self.video.height = height
+            self.video_container.width = width
+            self.video_container.height = height
+            self.overlay.content.width = width
+            self.overlay.content.height = height
+            self.update()
+
+        def handle_fullscreen(self, is_fullscreen):
+            if is_fullscreen:
+                print(f"Entering fullscreen. Page size: {page.width}x{page.height}")
+                self.video.width = page.width
+                self.video.height = page.height
+                self.video.fit = ft.ImageFit.COVER
+                self.video_container.width = page.width
+                self.video_container.height = page.height
+                self.overlay.content.width = page.width
+                self.overlay.content.height = page.height
+            else:
+                self.video.width = page.window_width
+                self.video.height = page.window_height
+                self.video_container.width = page.window_width
+                self.video_container.height = page.window_height
+                self.overlay.content.width = page.window_width
+                self.overlay.content.height = page.window_height
             self.update()
 
     status_label = ft.Text("Status:", color="white", size=18, weight="bold")
-    progress_bar = ft.ProgressBar(width=page.width * 0.26, value=0, color="#97E9E6")  # 26% of window width
+    progress_bar = ft.ProgressBar(width=page.width * 0.26, value=0, color="#38D3FB")  # 26% of window width
     status_text = ft.Text("", color="white", size=16)
-
     install_task = {"task": None, "cancel_event": None}
 
     def quick_update():
@@ -223,18 +245,14 @@ def main(page: ft.Page):
         if install_task["task"] and not install_task["task"].done():
             install_task["cancel_event"].set()
             await install_task["task"]
-
         cancel_event = asyncio.Event()
         install_task["cancel_event"] = cancel_event
-
         status_text.value = "Installing mod..."
         progress_bar.value = 0
         quick_update()
-
         def progress_callback(value):
             progress_bar.value = value / 100
             quick_update()
-
         async def do_install():
             result = await mod_manager.install_mod(progress_callback)
             if cancel_event.is_set():
@@ -242,15 +260,13 @@ def main(page: ft.Page):
             else:
                 status_text.value = result
             quick_update()
-
         install_task["task"] = asyncio.create_task(do_install())
         await install_task["task"]
 
     async def uninstall_mod_click(e):
-        if install_task["task"] and not install_task["task"].done():
+        if install_task["task"] and not install_task["task"].done:
             install_task["cancel_event"].set()
             await install_task["task"]
-
         status_text.value = "Restoring original files..."
         progress_bar.value = 0
         quick_update()
@@ -318,27 +334,25 @@ def main(page: ft.Page):
         ft.Container(status_label, padding=ft.padding.only(top=page.height * 0.02)),
         status_text,
         progress_bar,
-        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 | Directal |", size=12, color="white"),
+        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 || VANGAURD CREDITS: Directal | Hypnoskid12345 |", size=12, color="white"),
     ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
 
     dynamic_bg = None
-    dynamic_gif = None
+    dynamic_video = None
     stack_children = []
     if os.path.exists(bg_path):
         dynamic_bg = DynamicBg()
         stack_children.append(dynamic_bg)
-
-    if os.path.exists(gif_path):
-        dynamic_gif = DynamicGif()
-        stack_children.append(dynamic_gif)
-
+    if os.path.exists(mp4_path):
+        dynamic_video = DynamicVideo()
+        stack_children.append(dynamic_video)
     stack_children.append(content)
 
     def on_resize(e):
         if dynamic_bg:
             dynamic_bg.resize(page.window_width, page.window_height)
-        if dynamic_gif:
-            dynamic_gif.resize(page.window_width, page.window_height)
+        if dynamic_video:
+            dynamic_video.resize(page.window_width, page.window_height)
         # Update control sizes on resize
         if splash_logo:
             splash_logo.width = page.width * 0.57 if page.width * 0.57 <= 1100 else 1100
@@ -354,8 +368,8 @@ def main(page: ft.Page):
         content.controls[1].padding = ft.padding.only(top=page.height * 0.02, left=page.width * 0.03, right=page.width * 0.03)
         content.controls[2].padding = ft.padding.only(top=page.height * 0.02)
         page.update()
-    page.on_resize = on_resize
 
+    page.on_resize = on_resize
     page.add(
         ft.Stack([
             *stack_children,
