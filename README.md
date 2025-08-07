@@ -31,7 +31,7 @@ python launcher.py
 ________________________________
 
 P.V.G Mod Launcher is forked off the Nuphillion mod launcher, developed by CutesyThrower12 and TheDoctor200
-
+https://github.com/TheDoctor200/NuphillionLauncher
 
 ---
 
