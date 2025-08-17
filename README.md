@@ -1,3 +1,5 @@
+<img width="1100" height="600" alt="splashlogo(1)" src="https://github.com/user-attachments/assets/d3353c1e-21d6-42ef-864f-e4ac067f6b27" />
+
 #PROJECT VANGAURD | MOD LAUNCHER
 ________________________________
 
@@ -12,6 +14,7 @@ ________________________________
 ________________________________
 
 ##Installation
+
 
 You can either build from source or use the precompiled Windows installer available on the [Releases Page](https://github.com/TheDoctor200/NuphillionLauncher/releases/latest).
 
