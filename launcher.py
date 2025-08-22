@@ -139,11 +139,18 @@ def main(page: ft.Page):
     page.padding = 0
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
+    music_path = os.path.join(ASSETS_DIR, "menu.mp3")
     bg_path = os.path.join(ASSETS_DIR, "new_bg.png")  # 1920x1080 background
     splash_logo_path = os.path.join(ASSETS_DIR, "splash_logo.png")  # 1100x600 logo
     mp4_path = os.path.join(ASSETS_DIR, "HaloWars2Preview.mp4")
     favicon_path = os.path.join(ASSETS_DIR, "favicon.ico")
     logging.debug(f"Attempting to load favicon from: {favicon_path}")
+    
+    bg_music = ft.Audio(
+        src=music_path,
+        autoplay=True,
+    )
+    
     for attempt in range(3):  # Retry up to 3 times
         if os.path.exists(favicon_path):
             logging.debug(f"Favicon found on attempt {attempt + 1}, setting icon")
@@ -231,6 +238,15 @@ def main(page: ft.Page):
     def quick_update():
         status_text.update()
         progress_bar.update()
+    
+    def on_window_event(e: ft.ControlEvent):
+        if e.data == "focused":   # Window gains focus
+            bg_music.resume()
+        elif e.data == "unfocused":  # Window loses focus
+            bg_music.pause()
+
+    page.on_window_event = on_window_event
+    page.overlay.append(bg_music)
 
     async def install_mod_click(e):
         if install_task["task"] and not install_task["task"].done():
@@ -325,7 +341,7 @@ def main(page: ft.Page):
         ft.Container(status_label, padding=ft.padding.only(top=page.height * 0.02)),
         status_text,
         progress_bar,
-        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 || VANGAURD CREDITS: Directal | Hypnoskid12345", size=12, color="white"),
+        ft.Text("Mod Manager Credits: | TheDoctor | CutesyThrower12 || VANGAURD CREDITS: Directal", size=12, color="white"),
     ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True)
 
     dynamic_bg = None

@@ -35,6 +35,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='C:\\Users\\shoup\\AppData\\Local\\Temp\\875841ee-0dce-4b46-b0f0-2828360080ef',
+    version='C:\\Users\\shoup\\AppData\\Local\\Temp\\488d72bc-8aeb-402b-a9a0-533d2b65c34b',
     icon=['assets\\favicon.ico'],
 )
