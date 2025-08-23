@@ -4,7 +4,7 @@
 ________________________________
 
 ##Features:
-- **One-click install/uninstall** of the Nuphillion Mod
+- **One-click install/uninstall** of the Project Vangaurd Mod
 - **Automatic update checks** and easy updating
 - **Bandwidth and download statistics** with live preview
 - **Game launch integration** dynamic HW2 Launcher + possible offline support for future via dll injection
